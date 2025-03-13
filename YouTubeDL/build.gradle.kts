@@ -21,9 +21,11 @@ repositories {
 extra["snippetsDir"] = file("build/generated-snippets")
 
 dependencies {
+	implementation("me.paulschwarz:spring-dotenv:4.0.0")
 	implementation("org.springframework.boot:spring-boot-starter-graphql")
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-websocket")
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	runtimeOnly("org.postgresql:postgresql")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework:spring-webflux")
