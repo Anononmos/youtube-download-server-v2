@@ -9,9 +9,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 public class VideoController {
     
-    @GetMapping("/")
-    public String getMethodName() {
-        return "Hello World";
+    @PostMapping("/download")
+    public String download(@RequestBody String entity) {
+        //TODO: process POST request
+        
+        return entity;
+    }
+    
+    @GetMapping("/download")
+    public String getDownload(@RequestParam String param) {
+        return new String();
     }
     
 }
