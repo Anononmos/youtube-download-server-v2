@@ -58,4 +58,8 @@ public final class Shell {
         printStream(stdout, "Updating yt-dlp");
         printError(stderr, "Error updating yt-dlp", null);
     }
+
+    public static void download() throws Exception {
+        
+    }
 }

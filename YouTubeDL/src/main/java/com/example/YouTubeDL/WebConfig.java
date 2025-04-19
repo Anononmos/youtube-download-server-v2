@@ -12,7 +12,6 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new UpdateDownloaderInterceptor())
                 .addPathPatterns("/offload");
         
-        registry.addInterceptor(new ValidateURLParamInterceptor())
-                .addPathPatterns("/offload");
+        
     }
 }
