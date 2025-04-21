@@ -1,18 +1,16 @@
 package com.example.YouTubeDL;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.io.IOUtils;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.example.YouTubeDL.YouTubeURLValidation.DownloadValidationErrorType;
+
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Valid;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
@@ -24,36 +22,51 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @RestController
 public class VideoController {
 
-    private Validator getValidator() {
+    private Validator geValidator() {
         ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
 
         return factory.getValidator();
     }
     
-    @PostMapping(value="/offload", consumes="application/json")
-    public @ResponseBody String offload(@Valid @RequestBody DownloadParams body) {
+    @PostMapping(value = "/offload", consumes = "application/json", produces = "application/json")
+    public @ResponseBody String offload(@RequestBody DownloadRequest body) {
 
-        Set<ConstraintViolation<DownloadParams>> violations = getValidator().validate(body);
+        Set<ConstraintViolation<DownloadRequest>> violations = geValidator().validate(body);
+
         if ( !violations.isEmpty() ) {
-            List<String> errors = violations.stream().map(ConstraintViolation::getMessage).toList();
+            List<ConstraintViolation<DownloadRequest>> vList = violations.stream().toList();
 
-            for (String error : errors) {
-                System.out.println(error);
+            // TODO: collate violations into unique lists and throw custom exceptions for each
+
+            for (var violation : vList) {
+                var payload = violation.getConstraintDescriptor().getPayload();
+
+                if ( payload.contains(DownloadValidationErrorType.MissingURL.class) ) {
+                    System.out.println("Missing URL: " + violation.getMessage());
+
+                    
+                }
+
+                if ( payload.contains(DownloadValidationErrorType.InvalidURL.class) ) {
+                    System.out.println("Invalid URL: " + violation.getMessage());
+                }
+
+                // TODO: Implement resolution check
             }
         }
 
-        return null;
+        return "Hello";
     }
     
 
-    @GetMapping(value="/")
+    @GetMapping(value = "/")
     public String index(@RequestParam String param) {
         return "Hello World";
     }
     
     
-    @GetMapping(value="/download")
-    public String getDownload( @RequestParam(value="url", required=true) String url ) {
+    @GetMapping(value = "/download")
+    public String getDownload( @RequestParam(value = "url", required = true) String url ) {
         return new String("Hello World");
     }
     
