@@ -1,4 +1,4 @@
-package com.example.YouTubeDL.YouTubeURLValidation;
+package com.example.YouTubeDL.validation.YouTubeURLValidation;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;

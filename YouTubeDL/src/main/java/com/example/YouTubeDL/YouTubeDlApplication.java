@@ -20,5 +20,4 @@ public class YouTubeDlApplication {
 		// Free up resources when run terminates
 		applicationContext.close();
 	}
-
 }

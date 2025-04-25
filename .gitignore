@@ -38,3 +38,7 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Other ###
+Main.java
+Test.java

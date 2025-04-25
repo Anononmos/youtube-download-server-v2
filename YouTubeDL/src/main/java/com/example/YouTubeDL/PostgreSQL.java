@@ -10,13 +10,13 @@ import org.springframework.beans.factory.annotation.Value;
  */
 public class PostgreSQL {
 
-    @Value("${database.url}")
+    @Value("${spring.datasource.url}")
     private String url;
 
-    @Value("${database.username}")
+    @Value("${spring.datasource.username}")
     private String username;
 
-    @Value("${database.password}")
+    @Value("${spring.datasource.password}")
     private String password;
 
     private static PostgreSQL instance = null;
@@ -39,7 +39,7 @@ public class PostgreSQL {
         return instance;
     }
 
-    public static void addVideo() {
-
+    public void addVideo() {
+        
     }
 }
