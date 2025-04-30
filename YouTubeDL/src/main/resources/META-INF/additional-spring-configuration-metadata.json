@@ -1,9 +1,12 @@
-{
-    "properties": [
-        {
-            "name": "application.resolutions",
-            "type": "java.lang.String",
-            "description": "Stores avalilable resolutions."
-        }
-    ]
-}
+{"properties": [
+  {
+    "name": "application.resolutions",
+    "type": "java.lang.String",
+    "description": "Stores avalilable resolutions."
+  },
+  {
+    "name": "application.download.directory",
+    "type": "java.lang.String",
+    "description": "Stores directory where downloaded videos are saved."
+  }
+]}

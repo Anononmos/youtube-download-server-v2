@@ -5,8 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.springframework.beans.factory.annotation.Value;
+
 public final class Shell {
 
+    /**
+     * 
+     * @param inputStream
+     * @param message
+     * @throws IOException
+     */
     private static void printStream(InputStream inputStream, String message) throws IOException {
         System.out.println(message);
 
@@ -22,8 +30,15 @@ public final class Shell {
         }
     }
 
+    /**
+     * 
+     * @param errorStream
+     * @param message
+     * @param err
+     * @throws Exception
+     */
     private static void printError(InputStream errorStream, String message, Exception err) throws Exception {
-        System.out.println(message);
+        System.err.println(message);
 
         try (
             BufferedReader reader = new BufferedReader(
@@ -33,7 +48,7 @@ public final class Shell {
             if (reader.ready()) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
+                    System.err.println(line);
                 }
 
                 // Option to only log errors
@@ -42,10 +57,22 @@ public final class Shell {
                 }
             }
 
-            System.out.println("Process completed with no errors.");
+            System.err.println("Process completed with no errors.");
         }
     }
+
+    /**
+     * 
+     * @param url
+     */
+    private static void downloadAudio(String url) {
+        
+    } 
     
+    /**
+     * 
+     * @throws Exception
+     */
     public static void updateYTdlp() throws Exception {
         String[] cmd = "pip install \"yt-dlp[default]\"".split(" ");
 
@@ -59,7 +86,15 @@ public final class Shell {
         printError(stderr, "Error updating yt-dlp", null);
     }
 
-    public static void download() throws Exception {
+    public static void download(String url, Integer resolution, DownloadType type, String directory) throws Exception {
+        switch (type) {
+            case DownloadType.Audio:
+                downloadAudio(url);
+
+                break;
         
+            case DownloadType.Video:
+                break;
+        }
     }
 }
