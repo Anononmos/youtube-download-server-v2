@@ -8,10 +8,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class UpdateDownloaderInterceptor implements HandlerInterceptor {
+
+    private LastUpdateRepository lastUpdateRepository;
+
+    public UpdateDownloaderInterceptor(LastUpdateRepository lastUpdateRepository) {
+        this.lastUpdateRepository = lastUpdateRepository;
+    }
     
     @SuppressWarnings("null")
     @Override
     public boolean preHandle(HttpServletRequest req, HttpServletResponse res, Object handler) throws Exception {
+
+        if ( !lastUpdateRepository.canUpdate() ) {
+            System.out.println("Did not update yt-dlp.");
+
+            return true;
+        }
 
         try {
             Shell.updateYTdlp();

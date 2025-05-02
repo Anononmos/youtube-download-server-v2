@@ -1,5 +1,7 @@
 package com.example.YouTubeDL;
 
+import java.sql.SQLException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,9 +22,9 @@ public class VideoController {
     @PostMapping(value = "/offload", consumes = "application/json", produces = "application/json")
     public @ResponseBody String offload(@Valid @RequestBody DownloadRequest body) {
 
+        
 
-
-        return "Hello";
+        return "Successfully validated";
     }
     
 

@@ -65,7 +65,7 @@ public final class Shell {
      * 
      * @param url
      */
-    private static void downloadAudio(String url) {
+    private static void downloadAudio(String url, String directory) {
         
     } 
     
@@ -89,7 +89,7 @@ public final class Shell {
     public static void download(String url, Integer resolution, DownloadType type, String directory) throws Exception {
         switch (type) {
             case DownloadType.Audio:
-                downloadAudio(url);
+                downloadAudio(url, directory);
 
                 break;
         
