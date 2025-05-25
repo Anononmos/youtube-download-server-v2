@@ -20,21 +20,57 @@ public class DownloadRequest {
     @ResolutionValidation()
     private Integer res;
 
+    /**
+     * 
+     * @param type
+     * @param url
+     * @param res
+     */
     public DownloadRequest(String type, String url, Integer res) {
         this.url = url;
         this.res = (res != null) ? res : 1080;          // Default resolution set to 1080p.
         this.type = (type != null) ? type : "video";    // Default value is video
     }
 
-    public String getUrl() {
+    public VideoParams toVideoParams() {
+        DownloadType media = DownloadType.Video;
+
+        switch (type) {
+            case "video":
+                media = DownloadType.Video;
+
+                break;
+        
+            case "audio":
+                media = DownloadType.Audio;
+
+                break;
+        }
+
+        return new VideoParams(media, url, res);
+    }
+
+    /**
+     * 
+     * @return
+     */
+    public String url() {
         return url;
     }
 
-    public Integer getResolution() {
+    /**
+     * 
+     * @return
+     */
+    public Integer resolution() {
         return res;
     }
 
-    public String getType() {
+    /**
+     * 
+     * @return
+     */
+    public String type() {
         return type;
     }
 }

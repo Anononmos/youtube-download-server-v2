@@ -1,9 +1,9 @@
-package com.example.YouTubeDL;
+package com.example.YouTubeDL.updater;
 
 import java.time.LocalDate;
 
 public interface LastUpdateRepository {
-    public int setDate(LocalDate date);
+    public int updateDate();
 
     public boolean canUpdate();
 }

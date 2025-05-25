@@ -1,4 +1,4 @@
-package com.example.YouTubeDL;
+package com.example.YouTubeDL.updater;
 
 import java.time.LocalDate;
 
@@ -8,7 +8,7 @@ import org.springframework.jdbc.core.RowCountCallbackHandler;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class JdbcLastUpdateRepository implements LastUpdateRepository {
+public class LastUpdateRepositoryImpl implements LastUpdateRepository {
     
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -18,10 +18,10 @@ public class JdbcLastUpdateRepository implements LastUpdateRepository {
      * @param date
      * @return
      */
-    public int setDate(LocalDate date) {
+    public int updateDate() {
         String cmd = "UPDATE last_update SET date=?";
 
-        return jdbcTemplate.update(cmd, date);
+        return jdbcTemplate.update(cmd, LocalDate.now());
     }    
 
     /**
