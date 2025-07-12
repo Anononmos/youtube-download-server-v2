@@ -11,7 +11,7 @@ import jakarta.validation.ConstraintValidatorContext;
 
 public class ResolutionValidator implements ConstraintValidator<ResolutionValidation, Integer> {
 
-    @Value("${application.resolutions}")
+    @Value("${application.download.resolutions}")
     private String resolutionsString;
 
     private Set<Integer> resolutions;
