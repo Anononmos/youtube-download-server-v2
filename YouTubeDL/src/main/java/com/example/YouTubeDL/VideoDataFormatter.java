@@ -10,7 +10,7 @@ public class VideoDataFormatter implements DataFormatter {
         "channel_url", 
         "upload_date", 
         "duration", 
-        "ext"
+        "filename"
     };
 
     public VideoDataFormatter() {

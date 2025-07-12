@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 import org.postgresql.util.PGInterval;
-import org.springframework.format.datetime.DateFormatter;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class VideoJson {
@@ -36,8 +34,8 @@ public class VideoJson {
     @JsonProperty("duration")
     private Integer duration;
 
-    @JsonProperty("ext")
-    private String ext;
+    @JsonProperty("filename")
+    private String filename;
 
     // Getters
 
@@ -81,7 +79,7 @@ public class VideoJson {
         return new PGInterval(date);
     }
 
-    public String ext() {
-        return ext;
+    public String filename() {
+        return filename;
     }
 }

@@ -6,7 +6,7 @@ CREATE TABLE updated (
 
 CREATE TABLE video (
     -- Video properties
-    media CHAR(5) NOT NULL, 
+    media Media NOT NULL, 
     id CHAR(11) NOT NULL PRIMARY KEY, 
     title VARCHAR(127), 
     channel VARCHAR(255),

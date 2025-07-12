@@ -1,11 +1,11 @@
 package com.example.YouTubeDL.updater;
 
 import java.io.IOException;
-import java.time.LocalDate;
 
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import com.example.YouTubeDL.Shell;
+import com.example.YouTubeDL.exceptions.DownloaderExceptions.UpdaterException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,6 +32,13 @@ public class UpdateDownloaderInterceptor implements HandlerInterceptor {
             Shell.updateYTdlp();
         }
         catch (IOException e) {
+            System.out.println("Failed to update yt-dlp.");
+
+            e.printStackTrace();
+
+            return false;
+        }
+        catch (UpdaterException e) {
             System.out.println("Failed to update yt-dlp.");
 
             e.printStackTrace();

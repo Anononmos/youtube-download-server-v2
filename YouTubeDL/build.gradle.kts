@@ -23,6 +23,7 @@ extra["snippetsDir"] = file("build/generated-snippets")
 dependencies {
 	implementation("me.paulschwarz:spring-dotenv:4.0.0")
 	implementation("commons-io:commons-io:2.18.0")
+	implementation("org.apache.commons:commons-text:1.13.1")
 	implementation("org.springframework.boot:spring-boot-starter-validation:3.0.6")
 	implementation("org.springframework.boot:spring-boot-starter-graphql")
   	implementation("org.springframework.boot:spring-boot-starter-jdbc")

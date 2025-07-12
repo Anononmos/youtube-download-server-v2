@@ -6,11 +6,13 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import me.paulschwarz.springdotenv.DotenvPropertySource;
 
 @SpringBootApplication
-public class YouTubeDlApplication implements CommandLineRunner {
+@EnableTransactionManagement
+public class YouTubeDownloaderApplication implements CommandLineRunner {
 
 	public static void main(String[] args) {
 		AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
@@ -19,7 +21,7 @@ public class YouTubeDlApplication implements CommandLineRunner {
 		DotenvPropertySource.addToEnvironment(applicationContext.getEnvironment());
 		applicationContext.refresh();
 
-		SpringApplication.run(YouTubeDlApplication.class, args);
+		SpringApplication.run(YouTubeDownloaderApplication.class, args);
 
 		// Free up resources when run terminates
 		applicationContext.close();
