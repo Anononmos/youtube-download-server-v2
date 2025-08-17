@@ -1,6 +1,13 @@
 package com.example.YouTubeDL;
 
+import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 
 public class ProgressJson {
 
@@ -9,99 +16,100 @@ public class ProgressJson {
 
     private Double percent;
 
+    @JsonSetter("_downloaded_bytes_str")
     private String downloadedBytes;
+
+    @JsonSetter("_total_bytes_str")
     private String totalBytes;
+
+    @JsonSetter("_total_bytes_estimate_str")
     private String estimatedBytes;
-    
+
+    @JsonSetter("fragment_index")
+    @JsonFormat(shape = Shape.NUMBER_INT)
     private Integer fragment;
 
-    @JsonProperty("fragment_count")
+    @JsonSetter("fragment_count")
+    @JsonFormat(shape = Shape.NUMBER_INT)
     private Integer numFragments;
 
+    @JsonSetter("_speed_str")
     private String speed;
+
+    @JsonSetter("_elapsed_str")
     private String elapsed;
+
+    @JsonSetter("_eta_str")
     private String eta;
 
-    @JsonProperty("_percent_str")
-    public void setPercent(String percentString) {
-        // Remove last character
+    // Setters
 
-        String number = percentString.replaceFirst(".$", "").trim();
-        this.percent = Double.parseDouble(number) / 100;
+    @JsonSetter("_percent_str")
+    private void setPercent(String percentStr) {
+        this.percent = Optional.ofNullable(percentStr)
+                .map(str -> str.replaceAll("%", ""))
+                .map(str -> Double.parseDouble(str) / 100)
+                .orElse(0.0);
     }
 
-    @JsonProperty("percent")
-    public Double getPercent() {
+    @JsonIgnore()
+    public Boolean isFinished() {
+        return status.equals("finished");
+    }
+
+    @JsonIgnore()
+    public Boolean isDownloading() {
+        return status.equals("downloading");
+    }
+
+    // Getters
+
+    public String status() {
+        return this.status;
+    }
+
+    @JsonGetter("percent")
+    public Double percent() {
         return this.percent;
     }
 
-    @JsonProperty("_downloaded_bytes_str")
-    public void setDownloadedBytes(String downloadedBytes) {
-        this.downloadedBytes = downloadedBytes.trim();
-    }
-
-    @JsonProperty("downloaded_bytes")
-    public String getDownloadedBytes() {
+    @JsonGetter("downloaded_bytes")
+    public String downloadedBytes() {
         return this.downloadedBytes;
     }
 
-    @JsonProperty("_total_bytes_str")
-    public void setTotalBytes(String totalBytes) {
-        this.totalBytes = totalBytes.trim();
-    }
-
-    @JsonProperty("total_bytes")
-    public String getTotalBytes() {
+    @JsonGetter("total_bytes")
+    public String totalBytes() {
         return this.totalBytes;
     }
 
-    @JsonProperty("_total_bytes_estimate_str")
-    public void setEstimatedBytes(String estimatedBytes) {
-        this.estimatedBytes = estimatedBytes.trim();
-    }
-
-    @JsonProperty("estimated_bytes")
-    public String getEstimatedBytes() {
+    @JsonGetter("estimated_bytes")
+    public String estimatedBytes() {
         return this.estimatedBytes;
     }
 
-    @JsonProperty("fragment_index")
-    public void setFragment(Integer fragment_index) {
-        this.fragment = fragment_index;
-    }
-
-    @JsonProperty("fragment")
-    public Integer getFragment() {
+    @JsonGetter("fragment_index")
+    public Integer fragment() {
         return this.fragment;
     }
 
-    @JsonProperty("_speed_str")
-    public void setSpeed(String speed) {
-        this.speed = speed.trim();
+    @JsonGetter("fragment_count")
+    public Integer numFragments() {
+        return this.numFragments;
     }
-
-    @JsonProperty("speed") 
-    public String getSpeed() {
+    
+    @JsonGetter("speed")
+    public String speed() {
         return this.speed;
     }
 
-    @JsonProperty("_elapsed_str") 
-    public void setElapsed(String elapsed) {
-        this.elapsed = elapsed.trim();
-    }
-
-    @JsonProperty("elapsed")
-    public String getElapsed() {
+    @JsonGetter("elapsed")
+    public String elapsed() {
         return this.elapsed;
     }
 
-    @JsonProperty("_eta_str") 
-    public void setEta(String eta) {
-        this.eta = eta.trim();
-    }
-
-    @JsonProperty("eta")
-    public String getEta() {
+    @JsonGetter("eta")
+    public String eta() {
         return this.eta;
     }
 }

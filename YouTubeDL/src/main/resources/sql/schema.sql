@@ -4,26 +4,21 @@ CREATE TABLE updated (
     CONSTRAINT id CHECK (id)
 );
 
-CREATE TABLE video (
-    -- Video properties
-    media Media NOT NULL, 
-    id CHAR(11) NOT NULL PRIMARY KEY, 
-    title VARCHAR(127), 
-    channel VARCHAR(255),
-    channel_id CHAR(24) NOT NULL,
-    uploaded DATE NOT NULL,
-
-    -- File properties
-    duration INTERVAL NOT NULL,
-    resolution SMALLINT, 
-    downloaded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    file_path VARCHAR(255) NOT NULL, 
-
-    CONSTRAINT category CHECK ( category in ('Audio', 'Video') ), 
-    CONSTRAINT resolution CHECK ( resolution in (NULL, 144, 240, 360, 480, 720, 1080, 1440) )
+CREATE TABLE CHANNEL (
+    id CHAR(24) NOT NULL PRIMARY KEY,
+    channel_name TEXT NOT NULL, 
+    videos INT NOT NULL DEFAULT 1 CHECK (videos >= 0)
 );
 
-CREATE TABLE channel (
+CREATE TABLE VIDEO (
+    media MEDIA NOT NULL, 
     id CHAR(11) NOT NULL PRIMARY KEY, 
-    name VARCHAR(127), 
+    title TEXT NOT NULL, 
+    channel CHAR(24) NOT NULL REFERENCES CHANNEL(id), 
+    duration INTERVAL NOT NULL, 
+    uploaded DATE NOT NULL, 
+    downloaded TIMESTAMP DEFAULT NOW(),
+    resolution SMALLINT,
+    file_path TEXT NOT NULL, 
+    CONSTRAINT valid_resolutions CHECK (resolution IN (NULL, 144, 240, 360, 480, 720, 1080, 1440))
 );

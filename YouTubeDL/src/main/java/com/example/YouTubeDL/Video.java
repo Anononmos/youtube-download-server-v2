@@ -5,27 +5,27 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
-
 import org.postgresql.util.PGInterval;
+import com.example.YouTubeDL.downloadOptions.DownloadType;
 
 public record Video(
     DownloadType media, 
     String id, 
     String title, 
     String channel, 
-    String channelId,
+    String channelID,
     
     // 
     PGInterval duration, 
     Integer resolution, 
     LocalDate uploaded, 
     LocalDateTime downloaded, 
-    String file_path
+    String filePath
 ) {
     public Video(VideoParams params, VideoJson json) throws SQLException {
 
@@ -34,31 +34,45 @@ public record Video(
             json.id(), 
             json.title(), 
             json.channel(), 
-            json.channelId(),  
+            json.channelID(),  
             json.duration(), 
             params.res(), 
             json.uploaded(), 
             LocalDateTime.now(), 
             json.filename() 
-            );
+        );
     }
 
 
-    public Video(VideoParams params, VideoJson json, String file_path) throws SQLException, IOException {
+    public Video(VideoParams params, VideoJson json, String filePath) throws SQLException, IOException {
         this(
             params.type(), 
             json.id(),
             json.title(), 
             json.channel(), 
-            json.channelId(), 
+            json.channelID(), 
             json.duration(), 
             params.res(), 
             json.uploaded(), 
-            getCreationDate(file_path), 
-            file_path
+            getCreationDate(filePath), 
+            filePath
         );
     }
 
+    public Video(ResultSet rs) throws SQLException {
+        this(
+            DownloadType.valueOf( rs.getString("media") ), 
+            rs.getString("id"), 
+            rs.getString("title"), 
+            rs.getString("channel_name"), 
+            rs.getString("channel"), 
+            (PGInterval) rs.getObject("duration"), 
+            rs.getInt("resolution"), 
+            rs.getDate("uploaded").toLocalDate(), 
+            rs.getTimestamp("downloaded").toLocalDateTime(), 
+            rs.getString("file_path")
+        );
+    }
 
     private static LocalDateTime getCreationDate(String file_path) throws IOException {
         File file = new File(file_path);
@@ -70,20 +84,5 @@ public record Video(
         FileTime fileTime = (FileTime) Files.getAttribute(file.toPath(), "creationTime");
 
         return LocalDateTime.ofInstant(fileTime.toInstant(), ZoneId.systemDefault());
-    }
-
-
-    public Object[] toObjectArray() {
-        return new Object[] { media, id, title, channel, channelId, duration, resolution, file_path };
-    }
-
-
-    public String getParamsTemplate() {
-        Object[] values = toObjectArray();
-        String[] params = new String[values.length];
-
-        Arrays.fill(params, "?");        
-
-        return String.join(", ", params);
     }
 }

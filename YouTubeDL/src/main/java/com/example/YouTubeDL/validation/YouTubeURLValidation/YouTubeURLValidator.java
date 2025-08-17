@@ -45,7 +45,7 @@ public class YouTubeURLValidator implements ConstraintValidator<YouTubeURLValida
             valdiationURL = new URI(validationString).toURL();
         }
         catch (MalformedURLException | URISyntaxException e) {
-            String format = "Request body parameter \"url\" [%s] is an invalid URL.";
+            String format = "Input URL [%s] is an invalid URL.";
 
             setErrorMessage(context, format, url);
 
@@ -71,7 +71,7 @@ public class YouTubeURLValidator implements ConstraintValidator<YouTubeURLValida
             }
         }
         catch (IOException e) {
-            String format = "Connection failure when validating \"url\" [%s].";
+            String format = "Connection failure when validating URL [%s].";
 
             setErrorMessage(context, format, url);
 

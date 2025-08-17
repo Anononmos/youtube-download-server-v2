@@ -3,9 +3,9 @@ package com.example.YouTubeDL.exceptions.DownloaderExceptions;
 import java.util.LinkedList;
 import java.util.List;
 
-public class DownloaderException extends Exception {
+public class DownloaderException extends RuntimeException {
 
-    private String message;
+    private final String message;
     private List<String> errors;
     private List<String> warnings;
 
