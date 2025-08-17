@@ -20,7 +20,7 @@ public class VideoJson {
     private String channel;
 
     @JsonProperty("channel_id")
-    private String channelId;
+    private String channelID;
 
     @JsonProperty("webpage_url")
     private String url;
@@ -51,8 +51,8 @@ public class VideoJson {
         return channel;
     }
 
-    public String channelId() {
-        return channelId;
+    public String channelID() {
+        return channelID;
     }
 
     public String url() {

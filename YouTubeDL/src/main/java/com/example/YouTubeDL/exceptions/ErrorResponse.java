@@ -4,37 +4,21 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ErrorResponse {
-
-    private int statusCode;
-    private List<String> fields;
+    public final int status;
+    public final String reason;
     private List<String> errors;
 
-    public ErrorResponse(int code) {
-        statusCode = code;
-        fields = new LinkedList<>();
-        errors = new LinkedList<>();
+    public ErrorResponse(int status, String reason) {
+        this.status = status;
+        this.reason = reason;
+        this.errors = new LinkedList<>();
     }
 
-    public void addError(String message) {
-        errors.add(message);
-    }
-
-    public void addField(String field) {
-
-        if ( !fields.contains(field) ) {
-            fields.add(field);
-        }
-    }
-
-    public int getStatusCode() {
-        return statusCode;
-    }
-
-    public List<String> getFields() {
-        return fields;
+    public void addError(String error) {
+        errors.add(error);
     }
 
     public List<String> getErrors() {
-        return errors;
+        return this.errors;
     }
 }

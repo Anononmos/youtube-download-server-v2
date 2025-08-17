@@ -1,4 +1,4 @@
-package com.example.YouTubeDL;
+package com.example.YouTubeDL.downloadOptions;
 
 public enum DownloadType {
     Video ("video"), 
