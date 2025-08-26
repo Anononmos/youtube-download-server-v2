@@ -1,6 +1,8 @@
 package com.example.YouTubeDL.exceptions;
 
-import java.io.IOException;
+import java.io.FileNotFoundException;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,64 +10,107 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-
+import com.example.YouTubeDL.exceptions.ErrorResponse.ErrorType;
 import com.example.YouTubeDL.exceptions.DownloaderExceptions.AudioDownloadException;
 import com.example.YouTubeDL.exceptions.DownloaderExceptions.UpdaterException;
 import com.example.YouTubeDL.exceptions.DownloaderExceptions.VideoDownloadException;
 import com.example.YouTubeDL.exceptions.DownloaderExceptions.VideoInfoException;
+import com.example.YouTubeDL.exceptions.FileExceptions.InvalidFileException;
+import com.example.YouTubeDL.exceptions.QueryExceptions.VideoAlreadyExistsException;
+import com.example.YouTubeDL.exceptions.QueryExceptions.VideoNotFoundException;
 
 @ControllerAdvice
 public class ExceptionHandlerController {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handle(MethodArgumentNotValidException e) {
-        ErrorResponse response = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Input validation error.");
+    public ResponseEntity< List<ErrorResponse> > handle(MethodArgumentNotValidException e) {
+        List<ErrorResponse> errors = new LinkedList<>();
 
         for (FieldError error : e.getBindingResult().getFieldErrors()) {
-            response.addError( error.getDefaultMessage() );
+            ErrorResponse response = new ErrorResponse(ErrorType.Validation, error.getDefaultMessage());
+            
+            errors.add(response);
         }
 
-        return new ResponseEntity<ErrorResponse>(response, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR, reason = "Failed to download video.")
     @ExceptionHandler(VideoDownloadException.class)
-    public void handle(VideoDownloadException e) {
+    public ResponseEntity<ErrorResponse> handle(VideoDownloadException e) {
         e.printErrors();
         e.printWarnings();
+
+        ErrorResponse response = new ErrorResponse(ErrorType.Video, e.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR, reason = "Failed to download audio.")
     @ExceptionHandler(AudioDownloadException.class)
-    public void handle(AudioDownloadException e) {
+    public ResponseEntity<ErrorResponse> handle(AudioDownloadException e) {
         e.printErrors();
         e.printWarnings();
+
+        ErrorResponse response = new ErrorResponse(ErrorType.Audio, e.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR, reason = "Failed to extract YouTube video's information.")
     @ExceptionHandler(VideoInfoException.class)
-    public void handle(VideoInfoException e) {
+    public ResponseEntity<ErrorResponse> handle(VideoInfoException e) {
         e.printErrors();
         e.printWarnings();
+
+        ErrorResponse response = new ErrorResponse(ErrorType.Info, e.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
-    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR, reason = "Failed to update yt-dlp.")
     @ExceptionHandler(UpdaterException.class)
-    public void handle(UpdaterException e) {
+    public ResponseEntity<ErrorResponse> handle(UpdaterException e) {
         e.printErrors();
         e.printWarnings();
-    }
 
-    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR, reason = "Internal server error.")
-    @ExceptionHandler(InternalServerException.class)
-    public void handle(InternalServerException e) {
+        ErrorResponse response = new ErrorResponse(ErrorType.Updater, e.getMessage());
         
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ResponseStatus(value = HttpStatus.INTERNAL_SERVER_ERROR, reason = "Encountered IO error.")
-    @ExceptionHandler(IOException.class)
-    public void handle(IOException e) {
+    @ExceptionHandler(InternalServerException.class)
+    public ResponseEntity<ErrorResponse> handle(InternalServerException e) {
         e.printStackTrace();
+
+        return ResponseEntity.internalServerError().body( new ErrorResponse(ErrorType.Server, "Internal server error.") );
+    }
+
+    @ExceptionHandler(VideoAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handle(VideoAlreadyExistsException e) {
+        e.printStackTrace();
+
+        return ResponseEntity.internalServerError().body( new ErrorResponse(ErrorType.Query, e.getMessage()) );
+    }
+
+    @ExceptionHandler(VideoNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handle(VideoNotFoundException e) {
+        e.printStackTrace();
+
+        return ResponseEntity.internalServerError().body( new ErrorResponse(ErrorType.Query, e.getMessage()) );
+    }
+
+    @ExceptionHandler(InvalidFileException.class)
+    public ResponseEntity<ErrorResponse> handle(InvalidFileException e) {
+        e.printStackTrace();
+
+        ErrorResponse response = new ErrorResponse(ErrorType.Migration, e.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(FileNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handle(FileNotFoundException e) {
+        e.printStackTrace();
+
+        ErrorResponse response = new ErrorResponse(ErrorType.Migration, e.getMessage());
+
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 }

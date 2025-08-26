@@ -1,24 +1,23 @@
 package com.example.YouTubeDL.exceptions;
 
-import java.util.LinkedList;
-import java.util.List;
-
 public class ErrorResponse {
-    public final int status;
-    public final String reason;
-    private List<String> errors;
+    public enum ErrorType {
+        Validation, Video, Audio, Info, Updater, Server, Query, Migration
+    }
+    
+    private final ErrorType type;
+    private final String message;
 
-    public ErrorResponse(int status, String reason) {
-        this.status = status;
-        this.reason = reason;
-        this.errors = new LinkedList<>();
+    public ErrorResponse(ErrorType type, String message) {
+        this.type = type;
+        this.message = message;
     }
 
-    public void addError(String error) {
-        errors.add(error);
+    public ErrorType getType() {
+        return type;
     }
 
-    public List<String> getErrors() {
-        return this.errors;
+    public String getMessage() {
+        return message;
     }
 }

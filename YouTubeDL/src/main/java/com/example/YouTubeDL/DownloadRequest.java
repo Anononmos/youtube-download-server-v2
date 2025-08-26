@@ -18,7 +18,7 @@ public class DownloadRequest {
 
     @NotNull(message = "YouTube URL is missing from request.")
     @NotBlank(message = "YouTube URL provided is blank.")
-    @YouTubeURLValidation()
+    @YouTubeURLValidation
     public final String url; 
 
     public final Integer res;

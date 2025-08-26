@@ -1,9 +1,10 @@
 package com.example.YouTubeDL;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.LinkedList;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
@@ -13,9 +14,9 @@ import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.postgresql.util.PGInterval;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -30,8 +31,11 @@ import com.example.YouTubeDL.exceptions.DownloaderExceptions.AudioDownloadExcept
 import com.example.YouTubeDL.exceptions.DownloaderExceptions.DownloaderException;
 import com.example.YouTubeDL.exceptions.DownloaderExceptions.VideoDownloadException;
 import com.example.YouTubeDL.exceptions.DownloaderExceptions.VideoInfoException;
+import com.example.YouTubeDL.exceptions.FileExceptions.InvalidFileException;
+import com.example.YouTubeDL.exceptions.QueryExceptions.VideoAlreadyExistsException;
 import com.example.YouTubeDL.exceptions.QueryExceptions.VideoNotFoundException;
 import com.example.YouTubeDL.shells.Downloader;
+import com.example.YouTubeDL.shells.FilePropertiesExtractor;
 import com.example.YouTubeDL.shells.ShellOutput;
 import com.example.YouTubeDL.shells.Tester;
 
@@ -56,19 +60,11 @@ public class VideoServiceImpl implements VideoService {
     // private static final int EMIT_EVERY = 100;
 
     @Override
-    public int createVideo(Video video) {
-        final String channelInsertCmd = "INSERT INTO channel VALUES (:id, :name, DEFAULT) ON CONFLICT (id) DO UPDATE SET num_videos = EXCLUDED.num_videos + 1";
-        int changedRows;
-
-        SqlParameterSource channelInsertParams = new MapSqlParameterSource()
-        .addValue("id", video.channelID() )
-        .addValue("name", video.channel() );
-
-        // Must update 1 line
-        changedRows = jdbcTemplate.update(channelInsertCmd, channelInsertParams);
-
+    public Video createVideo(Video video) {
+        
         final String videoInsertCmd = "INSERT INTO video VALUES (:media::MEDIA, :id, :title, :channel, :duration, :uploaded, :downloaded, :resolution, :path)";
-
+        int changedRows;
+        
         SqlParameterSource videoInsertParams = new MapSqlParameterSource()
         .addValue("media", video.media().label)
         .addValue("id", video.id())
@@ -79,34 +75,49 @@ public class VideoServiceImpl implements VideoService {
         .addValue("downloaded", video.downloaded())
         .addValue("resolution", video.resolution())
         .addValue("path", video.filePath());
-
+        
         changedRows = jdbcTemplate.update(videoInsertCmd, videoInsertParams);
 
-        return changedRows;
+        if (changedRows == 0) {
+            throw new VideoAlreadyExistsException( "https://www.youtube.com/watch?v=%s".formatted(video.id()) );
+        }
+        
+        final String channelInsertCmd = "INSERT INTO channel VALUES (:id, :name, DEFAULT) ON CONFLICT (id) DO UPDATE SET num_videos = EXCLUDED.num_videos + 1";
+
+        SqlParameterSource channelInsertParams = new MapSqlParameterSource()
+        .addValue("id", video.channelID() )
+        .addValue("name", video.channel() );
+
+        // Must update 1 line
+        changedRows = jdbcTemplate.update(channelInsertCmd, channelInsertParams);
+
+        return video;
     }
 
     @Override
-    public int createVideoFromFile(VideoParams params, String filename) throws FileNotFoundException {
+    public Video createVideoFromFile(final String url, final String filename) throws FileNotFoundException, InvalidFileException, VideoInfoException {
 
-        // Check if file exists
-        // Get video info
+        FilePropertiesExtractor extractor = new FilePropertiesExtractor(directory, filename);
+        
+        DownloadType type = extractor.getDownloadType();
+        Integer resolution = extractor.getResolution();
+        LocalDateTime created = extractor.getCreationDate();
 
-        File file = new File( "%s/%s".formatted(directory, filename) ); 
-
-        if ( !file.exists() || file.isDirectory() ) {
-            throw new FileNotFoundException( String.format("Error: File with name [%s] does not exist in directory [%s]", filename, directory) );
-        }
-
+        VideoParams params = new VideoParams(type, url, resolution);
         Downloader downloader = new Downloader(params, directory);
-        ShellOutput<Video, VideoInfoException> futureInfo = downloader.getVideoInfo();
 
         try {
+            ShellOutput<Video, VideoInfoException> futureInfo = downloader.getVideoInfo(created, filename);
+
             futureInfo.error.join();
             Video video = futureInfo.result.join();
 
             return createVideo(video);
+
         }
         catch (CompletionException e) {
+            e.printStackTrace();
+
             try {
                 throw e.getCause();
             }
@@ -117,15 +128,13 @@ public class VideoServiceImpl implements VideoService {
                 throw ex;
             }
             catch (Throwable impossible) {
-                impossible.printStackTrace();
-
                 throw new InternalServerException(impossible);
             }
         }
         catch (CancellationException e) {
             e.printStackTrace();
 
-            throw new InternalServerException(e);
+            throw new InternalServerException( "ERROR: Video creation process from file [%s] was cancelled.".formatted(filename) );
         }
     }
 
@@ -136,21 +145,14 @@ public class VideoServiceImpl implements VideoService {
 
         SqlParameterSource params = new MapSqlParameterSource("id", id);
 
-        Video video = jdbcTemplate.query(cmd, params, (result) -> {
+        try {
+            Video video = jdbcTemplate.queryForObject(cmd, params, (result, _) -> new Video(result) );
 
-            // If no video exists
-            if ( !result.isBeforeFirst() ) {
-                return null;
-            }
-
-            return new Video(result);
-        });
-
-        if (video == null) {
+            return video;
+        }
+        catch (EmptyResultDataAccessException e) {
             throw new VideoNotFoundException(url);
         }
-
-        return video;
     }
 
     @Override
@@ -169,32 +171,28 @@ public class VideoServiceImpl implements VideoService {
         .addValue("limit", limit)
         .addValue("offset", page * limit);
 
-        List<Video> videos = jdbcTemplate.query( cmd, params, (rs, row) -> new Video(rs) );
+        List<Video> videos = jdbcTemplate.query( cmd, params, (rs, _) -> new Video(rs) );
 
         return videos;
     }
 
     @Override 
-    public String getFile(final String url) throws VideoNotFoundException {
+    public Path getFile(final String url) throws VideoNotFoundException {
         final String id = getIDFromURL(url);
         final String cmd = "SELECT file_path FROM video WHERE id=:id";
 
         SqlParameterSource params = new MapSqlParameterSource("id", id);
 
-        String filePath = jdbcTemplate.query(cmd, params, (result) -> {
+        try {
+            String filePath = jdbcTemplate.queryForObject(cmd, params, String.class);
 
-            if ( !result.isBeforeFirst() ) {
-                return null;
-            }
+            return Paths.get(directory, filePath);
+        }
+        catch (EmptyResultDataAccessException e) {
+            e.printStackTrace();
 
-            return result.getString("file_path");
-        });
-
-        if (filePath == null) {
             throw new VideoNotFoundException(url);
         }
-
-        return "%s/%s".formatted(directory, filePath);
     }
 
     @Override
@@ -207,7 +205,7 @@ public class VideoServiceImpl implements VideoService {
     public String getIDFromURL(final String url) throws VideoNotFoundException {
         final Map<String, String> urlRegexPairs = Map.ofEntries(
                 Map.entry("https://www.youtube.com/watch?", "v=([^&]+)"), 
-                Map.entry("https://www.youtube.", "^([^/?]+)")
+                Map.entry("https://youtu.be/", "^([^/?]+)")
             );
 
         String id = null;
@@ -234,7 +232,17 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public int deleteVideo(final String videoID) {
+    public int deleteVideo(final String videoID) throws VideoNotFoundException {
+
+        final String cmd = "DELETE FROM video WHERE id=:id";
+        SqlParameterSource params = new MapSqlParameterSource("id", videoID);
+
+        int changedRows = jdbcTemplate.update(cmd, params);
+
+        if ( changedRows == 0 ) {
+            throw new VideoNotFoundException(videoID);
+        }
+
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'deleteVideo'");
     }
@@ -274,6 +282,17 @@ public class VideoServiceImpl implements VideoService {
                 futureDownload.error.join();
                 futureDownload.result.join();
 
+                try {
+                    emitter.send(
+                        SseEmitter.event()
+                        .name("completed")
+                        .data(video)
+                    );
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+
                 emitter.complete();
 
                 return createVideo(video);
@@ -302,7 +321,7 @@ public class VideoServiceImpl implements VideoService {
                     );
                 }
 
-                return 0;
+                return null;
             }
             catch (CancellationException e) {
                 e.printStackTrace();
@@ -332,7 +351,7 @@ public class VideoServiceImpl implements VideoService {
                     }
                 }
 
-                return 0;
+                return null;
             }
         });
 
@@ -423,22 +442,6 @@ public class VideoServiceImpl implements VideoService {
     public void emitProgressData(SseEmitter emitter, String line, Integer lineIndex) {
 
         if ( line.isBlank() ) {
-            String json = "{ \"line\": %d }".formatted(lineIndex);
-
-            try {
-                emitter.send(
-                    SseEmitter.event()
-                    .name("completed")
-                    .data(
-                        json,
-                        MediaType.APPLICATION_JSON
-                    )
-                );
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
             return;
         }
 

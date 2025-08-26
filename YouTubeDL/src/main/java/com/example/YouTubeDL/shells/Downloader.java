@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
@@ -99,7 +100,7 @@ public class Downloader {
 
             return lines;
 
-        }, service).handleAsync((String output, Throwable ex) -> {
+        }, service).handleAsync( (String output, Throwable ex) -> {
             if (ex != null) {
                 ex.printStackTrace();
 
@@ -219,7 +220,7 @@ public class Downloader {
             }
 
             if ( result.hasError() ) {
-                throw new CompletionException(ex);
+                throw new CompletionException(result);
             }
 
             return result;
@@ -323,8 +324,8 @@ public class Downloader {
      * @throws IOException
      */
     public ShellOutput<Video, VideoInfoException> getVideoInfo() {
-        String format = videoInfoFormatter.getFormat(); 
-        String url = params.url();
+        final String format = videoInfoFormatter.getFormat(); 
+        final String url = params.url();
 
         String[] cmd = "yt-dlp --print \"%s\" --no-color \"%s\" --windows-filenames"
         .formatted(format, url)
@@ -362,6 +363,57 @@ public class Downloader {
                 return new Video(params, json);
                 
             } catch (Exception e) {
+                e.printStackTrace();
+
+                throw new IllegalArgumentException(e);
+            }
+        });
+
+        CompletableFuture<VideoInfoException> futureError = handleShellError(stderr, VideoInfoException.class, url, format);
+
+        return new ShellOutput<>(futureVideo, futureError);
+    }
+
+    public ShellOutput<Video, VideoInfoException> getVideoInfo(final LocalDateTime downloaded, final String filename) {
+        final String format = videoInfoFormatter.getFormat();
+        final String url = params.url();
+
+        String cmd[] = "yt-dlp --print \"s\" --no-color \"%s\" --windows-filenames"
+        .formatted(format, url)
+        .split(" ");
+
+        ProcessBuilder builder = new ProcessBuilder(cmd);
+        Process process;
+
+        try {
+            process = builder.start();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+
+            VideoInfoException exception = new VideoInfoException(url, format);
+            exception.addError("ERROR: Video information extraction process failed to start.");
+
+            return new ShellOutput<>(
+                CompletableFuture.completedFuture(null), 
+                CompletableFuture.failedFuture(exception)
+            );
+        }
+
+        InputStream stdout = process.getInputStream();
+        InputStream stderr = process.getErrorStream();
+
+        System.out.println("Retrieving the following information [%s] from URL [%s].".formatted(format, url));
+
+        CompletableFuture<Video> futureVideo = handleShellOutput(stdout, (output) -> {
+            ObjectMapper mapper = new ObjectMapper();
+
+            try {
+                VideoJson json = mapper.readValue(output, VideoJson.class);
+
+                return new Video(params, json, downloaded, filename);
+            }
+            catch (Exception e) {
                 e.printStackTrace();
 
                 throw new IllegalArgumentException(e);

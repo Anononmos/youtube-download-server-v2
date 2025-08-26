@@ -1,15 +1,9 @@
 package com.example.YouTubeDL;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.attribute.FileTime;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import org.postgresql.util.PGInterval;
 import com.example.YouTubeDL.downloadOptions.DownloadType;
 
@@ -43,19 +37,18 @@ public record Video(
         );
     }
 
-
-    public Video(VideoParams params, VideoJson json, String filePath) throws SQLException, IOException {
+    public Video(VideoParams params, VideoJson json, LocalDateTime downloaded, String filename) throws SQLException {
         this(
             params.type(), 
-            json.id(),
+            json.id(), 
             json.title(), 
             json.channel(), 
             json.channelID(), 
             json.duration(), 
             params.res(), 
             json.uploaded(), 
-            getCreationDate(filePath), 
-            filePath
+            downloaded, 
+            filename
         );
     }
 
@@ -72,17 +65,5 @@ public record Video(
             rs.getTimestamp("downloaded").toLocalDateTime(), 
             rs.getString("file_path")
         );
-    }
-
-    private static LocalDateTime getCreationDate(String file_path) throws IOException {
-        File file = new File(file_path);
-        
-        if ( !file.exists() || file.isDirectory() ) {
-            throw new FileNotFoundException(String.format("Error: File with path [%s] does not exist.", file_path));
-        }
-
-        FileTime fileTime = (FileTime) Files.getAttribute(file.toPath(), "creationTime");
-
-        return LocalDateTime.ofInstant(fileTime.toInstant(), ZoneId.systemDefault());
     }
 }

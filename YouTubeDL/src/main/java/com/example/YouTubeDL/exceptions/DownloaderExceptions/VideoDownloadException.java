@@ -6,7 +6,7 @@ public class VideoDownloadException extends DownloaderException {
     private Integer res;
 
     public VideoDownloadException(String url, Integer res) {
-        super( String.format("Failed to download video from url [%s], with resolution [%d].", url, res) );
+        super(String.format("Failed to download video from url [%s], with resolution [%d].", url, res) );
 
         this.url = url;
         this.res = res;
